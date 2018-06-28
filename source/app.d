@@ -1,5 +1,6 @@
 import std.stdio;
 import std.conv;
+import std.algorithm;
 
 struct P
 {
@@ -117,6 +118,14 @@ Input getInput()
   }
 }
 
+bool checkIsGameClear(const(char[][]) stage)
+{
+  foreach (l; stage) {
+    if (l.canFind("o")) { return false; }
+  }
+  return true;
+}
+
 
 void main()
 {
@@ -135,5 +144,9 @@ void main()
     if (input == Input.EXIT) { break; }
     updateGame(stage, player, input);
     drawStage(stage, player);
+    if (checkIsGameClear(stage)) {
+      writeln("Congratulations!");
+      break;
+    }
   }
 }
