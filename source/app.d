@@ -17,6 +17,39 @@ enum Input
 }
 
 
+void updateGame(ref string[] stage, ref P player, Input input)
+{
+  P newp = player;
+  final switch (input) {
+    case Input.UP:
+      newp.y--;
+      break;
+    case Input.DOWN:
+      newp.y++;
+      break;
+    case Input.LEFT:
+      newp.x--;
+      break;
+    case Input.RIGHT:
+      newp.x++;
+      break;
+    case Input.EXIT:
+      throw new Exception("Program error");
+  }
+  
+  if (newp.y < 0 || newp.y >= stage.length) {
+    return;
+  }
+  if (newp.x < 0 || newp.x >= stage[newp.y].length) {
+    return;
+  }
+  if (stage[newp.y][newp.x] == '#') {
+    return;
+  }
+  
+  player = newp;
+}
+
 void drawStage(const(string[]) stage, const(P) player)
 {
   foreach (y, l; stage) {
@@ -69,9 +102,11 @@ void main()
   ];
   auto player = P(1, 5);
   
+  drawStage(stage, player);
   while (true) {
-    drawStage(stage, player);
     auto input = getInput();
     if (input == Input.EXIT) { break; }
+    updateGame(stage, player, input);
+    drawStage(stage, player);
   }
 }
