@@ -55,7 +55,12 @@ void drawStage(const(string[]) stage, const(P) player)
   foreach (y, l; stage) {
     foreach (x, c; l) {
       if (player == P(y, x)) {
-        write('p');
+        if (c == '.') {
+          write('P');
+        }
+        else {
+          write('p');
+        }
       }
       else {
         write(c);
