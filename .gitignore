@@ -1,0 +1,14 @@
+.dub
+docs.json
+__dummy.html
+docs/
+kurohon.so
+kurohon.dylib
+kurohon.dll
+kurohon.a
+kurohon.lib
+kurohon-test-*
+*.exe
+*.o
+*.obj
+*.lst
