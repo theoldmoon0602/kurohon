@@ -1,10 +1,11 @@
 import std.stdio;
+import std.conv;
 
 struct P
 {
   public:
-    long y;
-    long x;
+    long y = 0;
+    long x = 0;
 }
 
 enum Input
@@ -17,21 +18,26 @@ enum Input
 }
 
 
-void updateGame(ref string[] stage, ref P player, Input input)
+void updateGame(ref char[][] stage, ref P player, Input input)
 {
   P newp = player;
+  P dp;
   final switch (input) {
     case Input.UP:
       newp.y--;
+      dp.y--;
       break;
     case Input.DOWN:
       newp.y++;
+      dp.y++;
       break;
     case Input.LEFT:
       newp.x--;
+      dp.x--;
       break;
     case Input.RIGHT:
       newp.x++;
+      dp.x++;
       break;
     case Input.EXIT:
       throw new Exception("Program error");
@@ -43,14 +49,30 @@ void updateGame(ref string[] stage, ref P player, Input input)
   if (newp.x < 0 || newp.x >= stage[newp.y].length) {
     return;
   }
-  if (stage[newp.y][newp.x] == '#') {
+  
+  auto c = stage[newp.y][newp.x];
+  if (c == '#') {
     return;
+  }
+  
+  if (c == 'o' || c == 'O') {
+    auto c2 = stage[newp.y + dp.y][newp.x + dp.x];
+    if (c2 == ' ') {
+      stage[newp.y + dp.y][newp.x + dp.x] = 'o';
+      stage[newp.y][newp.x] = (c == 'o') ? ' ' : '.';
+    } else if (c2 == '.') {
+      stage[newp.y + dp.y][newp.x + dp.x] = 'O';
+      stage[newp.y][newp.x] = (c == 'o') ? ' ' : '.';
+    }
+    else {
+      return;
+    }
   }
   
   player = newp;
 }
 
-void drawStage(const(string[]) stage, const(P) player)
+void drawStage(const(char[][]) stage, const(P) player)
 {
   foreach (y, l; stage) {
     foreach (x, c; l) {
@@ -98,13 +120,13 @@ Input getInput()
 
 void main()
 {
-  string[] stage = [
+  auto stage = [
     "########",
     "# ..   #",
     "# oo   #",
     "#      #",
     "########",
-  ];
+  ].to!(char[][]);
   auto player = P(1, 5);
   
   drawStage(stage, player);
