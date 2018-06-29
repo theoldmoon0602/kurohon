@@ -75,26 +75,44 @@ void updateGame(ref char[][] stage, ref P player, Input input)
   player = newp;
 }
 
+void setcolor(SDL_Renderer* renderer, long a, long b, long c){
+  SDL_SetRenderDrawColor(renderer, cast(ubyte)a, cast(ubyte)b, cast(ubyte)c, 0xff);
+}
+
+
 void drawStage(SDL_Renderer* renderer, const(char[][]) stage, const(P) player)
 {
+  setcolor(renderer, 0xff, 0xff, 0xff);
   SDL_RenderClear(renderer);
 
-  // foreach (y, l; stage) {
-  //   foreach (x, c; l) {
-  //     if (player == P(y, x)) {
-  //       if (c == '.') {
-  //         write('P');
-  //       }
-  //       else {
-  //         write('p');
-  //       }
-  //     }
-  //     else {
-  //       write(c);
-  //     }
-  //   }
-  //   writeln();
-  // }
+  foreach (y, l; stage) {
+    foreach (x, c; l) {
+      setcolor(renderer, 0xff, 0xff, 0xff);
+      if (c == '.') {
+        setcolor(renderer, 0x00, 0x00, 0xff);
+      }
+      else if (c == 'o') {
+        setcolor(renderer, 0xff, 0x00, 0xff);
+      }
+      else if (c == 'O') {
+        setcolor(renderer, 0x00, 0xff, 0xff);
+      }
+      else if (c == '#') {
+        setcolor(renderer, 0xee, 0xee, 0xee);
+      }
+      SDL_Rect r;
+      r.x = cast(int)x * 20;
+      r.y = cast(int)y * 20;
+      r.w = 20;
+      r.h = 20;
+      SDL_RenderFillRect(renderer, &r);
+
+      if (player == P(y, x)) {
+        setcolor(renderer, 0xff, 0x00, 0x00);
+        SDL_RenderDrawRect(renderer, &r);
+      }
+    }
+  }
 
   SDL_RenderPresent(renderer);
 }
