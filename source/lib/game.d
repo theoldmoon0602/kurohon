@@ -9,6 +9,7 @@ class Game
     SDL_Renderer* renderer;
     SDL_Texture* texture;
     uint[256] keystate;
+    int[][] pixelbuf;
 
     const uint width = 640;
     const uint height = 480;
@@ -26,7 +27,8 @@ class Game
           SDL_WINDOW_ALLOW_HIGHDPI);
       renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED);
       texture = SDL_CreateTexture(renderer,
-          SDL_PIXELFORMAT_ARGB8888, SDL_TEXTUREACCESS_STATIC, width, height);
+          SDL_PIXELFORMAT_RGBA8888, SDL_TEXTUREACCESS_STATIC, width, height);
+      pixelbuf = new int[][](height, width);
     }
     ~this() {
       SDL_Quit();
@@ -53,11 +55,11 @@ class Game
       return true;
     }
 
-    void draw(int[][] pixels) {
+    void redraw() {
       int[] vs = [];
-      foreach (x; 0..pixels[0].length) {
-        foreach (y; 0..pixels.length) {
-          vs ~= pixels[y][x];
+      foreach (y; 0..height) {
+        foreach (x; 0..width) {
+          vs ~= pixelbuf[y][x];
         }
       }
       SDL_UpdateTexture(texture, null, &(vs[0]), cast(int)(width * int.sizeof));

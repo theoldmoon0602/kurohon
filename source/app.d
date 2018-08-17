@@ -1,7 +1,15 @@
 import std.stdio;
 import std.conv;
 import std.algorithm;
+import std.range;
 import lib.game;
+import imageformats;
+
+Image wallImg;
+Image playerImg;
+Image mapImg;
+Image boxImg;
+Image goalImg;
 
 struct P
 {
@@ -97,34 +105,47 @@ void fillRect(ref int[][] pixels, long x, long y, long w, long h, int color)
   }
 }
 
+void drawImage(ref int[][] pixels, long x, long y, Image img)
+{
+  foreach (dx; 0..img.w) {
+    foreach (dy; 0..img.h) {
+      pixels[y + dy][x + dx] = img.pixels[dx * img.h + dy];
+    }
+  }
+}
+
 void drawStage(Game game, const(char[][]) stage, const(P) player)
 {
   auto pixels = new int[][](game.width, game.height);
 
   foreach (y, l; stage) {
     foreach (x, c; l) {
-      auto color = 0xffffff;
+      auto img = mapImg;
       if (c == '.') {
-        color = 0x0000ff;
+        img = goalImg;
       }
       else if (c == 'o') {
-        color = 0xff00ff;
+        img = boxImg;
       }
       else if (c == 'O') {
-        color = 0x00ffff;
+        img = boxImg;
       }
       else if (c == '#') {
-        color = 0xcccccc;
+        img = wallImg;
       }
-      pixels.fillRect(y * 20, x * 20, 20, 20, color);
+      pixels.drawImage(y * 32, x * 32, img);
 
       if (player == P(y, x)) {
-        pixels.drawRect(y * 20, x * 20, 20, 20, 0xff0000);
+        pixels.drawImage(y * 32, x * 32, playerImg);
       }
     }
   }
 
-  game.draw(pixels);
+  foreach (y; 0..game.height) {
+    foreach (x; 0..game.width) {
+      game.pixelbuf[y][x] = pixels[x][y];
+    }
+  }
 }
 
 bool checkIsGameClear(const(char[][]) stage)
@@ -133,6 +154,23 @@ bool checkIsGameClear(const(char[][]) stage)
     if (l.canFind("o")) { return false; }
   }
   return true;
+}
+
+struct Image {
+    public:
+        long w;
+        long h;
+        int[] pixels;
+}
+
+Image loadImage(string filepath)
+{
+    auto img = read_image(filepath, ColFmt.RGBA);
+    int[] pixels = [];
+    foreach (rgba; img.pixels.chunks(4)) {
+      pixels ~=  (rgba[0]<<24)|(rgba[1]<<16)|(rgba[2]<<8)|rgba[3];
+    }
+    return Image(img.w, img.h, pixels);
 }
 
 
@@ -147,6 +185,12 @@ void main() {
     "########",
   ].to!(char[][]);
   auto player = P(1, 5);
+
+  wallImg = loadImage("wall.png");
+  playerImg = loadImage("player.png");
+  boxImg = loadImage("box.png");
+  mapImg = loadImage("map.png");
+  goalImg = loadImage("goal.png");
 
   drawStage(game, stage, player);
   while (game.handleEvent()) {
@@ -169,6 +213,7 @@ void main() {
 
     updateGame(stage, player, input);
     drawStage(game, stage, player);
+    game.redraw();
     if (checkIsGameClear(stage)) {
       break;
     }
