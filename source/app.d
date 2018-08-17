@@ -1,78 +1,7 @@
 import std.stdio;
 import std.conv;
 import std.algorithm;
-import derelict.sdl2.sdl;
-
-class SdlContext
-{
-  public:
-    SDL_Window* window;
-    SDL_Renderer* renderer;
-    SDL_Texture* texture;
-    uint[256] keystate;
-
-    const uint width = 640;
-    const uint height = 480;
-
-    this()
-    {
-      DerelictSDL2.load();
-      SDL_Init(SDL_INIT_EVERYTHING);
-
-      window = SDL_CreateWindow(
-          "Kurohon",
-          SDL_WINDOWPOS_UNDEFINED,
-          SDL_WINDOWPOS_UNDEFINED,
-          width, height,
-          SDL_WINDOW_ALLOW_HIGHDPI);
-      renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED);
-      texture = SDL_CreateTexture(renderer,
-          SDL_PIXELFORMAT_ARGB8888, SDL_TEXTUREACCESS_STATIC, width, height);
-    }
-    ~this() {
-      SDL_Quit();
-    }
-
-    bool handleEvent()
-    {
-      SDL_Event e;
-      while (SDL_PollEvent(&e) != 0) {
-        if (e.type == SDL_QUIT) {
-          return false;
-        }
-      }
-      auto state = SDL_GetKeyboardState(null);
-      foreach (i, ref k; keystate) {
-        if (state[i]) {
-          k++;
-        }
-        else {
-          k = 0;
-        }
-      }
-
-      return true;
-    }
-
-    void draw(int[][] pixels) {
-      int[] vs = [];
-      foreach (x; 0..pixels[0].length) {
-        foreach (y; 0..pixels.length) {
-          vs ~= pixels[y][x];
-        }
-      }
-      SDL_UpdateTexture(texture, null, &(vs[0]), cast(int)(width * int.sizeof));
-      SDL_SetRenderDrawColor(renderer, 0x00,0x00,0x00,0x00);
-      SDL_RenderClear(renderer);
-      SDL_RenderCopy(renderer, texture, null, null);
-      SDL_RenderPresent(renderer);
-    }
-
-    uint key(long code) {
-      return keystate[code];
-    }
-
-}
+import lib.game;
 
 struct P
 {
@@ -168,9 +97,9 @@ void fillRect(ref int[][] pixels, long x, long y, long w, long h, int color)
   }
 }
 
-void drawStage(SdlContext ctx, const(char[][]) stage, const(P) player)
+void drawStage(Game game, const(char[][]) stage, const(P) player)
 {
-  auto pixels = new int[][](ctx.width, ctx.height);
+  auto pixels = new int[][](game.width, game.height);
 
   foreach (y, l; stage) {
     foreach (x, c; l) {
@@ -195,7 +124,7 @@ void drawStage(SdlContext ctx, const(char[][]) stage, const(P) player)
     }
   }
 
-  ctx.draw(pixels);
+  game.draw(pixels);
 }
 
 bool checkIsGameClear(const(char[][]) stage)
@@ -208,7 +137,7 @@ bool checkIsGameClear(const(char[][]) stage)
 
 
 void main() {
-  auto ctx = new SdlContext();
+  auto game = new Game();
 
   auto stage = [
     "########",
@@ -219,27 +148,27 @@ void main() {
   ].to!(char[][]);
   auto player = P(1, 5);
 
-  drawStage(ctx, stage, player);
-  while (ctx.handleEvent()) {
+  drawStage(game, stage, player);
+  while (game.handleEvent()) {
     Input input = Input.NONE;
-    if (ctx.key(SDL_SCANCODE_Q) == 1) {
+    if (game.key(SDL_SCANCODE_Q) == 1) {
       break;
     }
-    else if (ctx.key(SDL_SCANCODE_W) == 1) {
+    else if (game.key(SDL_SCANCODE_W) == 1) {
       input = Input.UP;
     }
-    else if (ctx.key(SDL_SCANCODE_A) == 1) {
+    else if (game.key(SDL_SCANCODE_A) == 1) {
       input = Input.LEFT;
     }
-    else if (ctx.key(SDL_SCANCODE_S) == 1) {
+    else if (game.key(SDL_SCANCODE_S) == 1) {
       input = Input.DOWN;
     }
-    else if (ctx.key(SDL_SCANCODE_D) == 1) {
+    else if (game.key(SDL_SCANCODE_D) == 1) {
       input = Input.RIGHT;
     }
 
     updateGame(stage, player, input);
-    drawStage(ctx, stage, player);
+    drawStage(game, stage, player);
     if (checkIsGameClear(stage)) {
       break;
     }
