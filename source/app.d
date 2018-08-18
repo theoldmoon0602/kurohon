@@ -110,10 +110,26 @@ void drawImage(ref int[][] pixels, long x, long y, Image img)
 {
   foreach (dx; 0..img.w) {
     foreach (dy; 0..img.h) {
-      auto p = img.pixels[dx * img.h + dy];
-      if ((cast(uint)(p) & 0x80000000)) {  // alpha bits >= 128
-        pixels[y + dy][x + dx] = p;
-      }
+      // alpha blending (additional completion)
+      int p1 = img.pixels[dx * img.h + dy];
+      int a  = (p1&0xff000000) >> 24;
+      int r1 = (p1&0x00ff0000) >> 16;
+      int g1 = (p1&0x0000ff00) >> 8;
+      int b1 = (p1&0x000000ff);
+
+      int p2 = pixels[y + dy][x + dx];
+      int r2 = (p2&0x00ff0000) >> 16;
+      int g2 = (p2&0x0000ff00) >> 8;
+      int b2 = (p2&0x000000ff);
+
+      double a1 = a / 255.0;
+      double a2 = (255 - a) / 255.0;
+
+      int r = cast(int)(a1 * r1 + a2 * r2);
+      int g = cast(int)(a1 * g1 + a2 * g2);
+      int b = cast(int)(a1 * b1 + a2 * b2);
+
+      pixels[y + dy][x + dx] = (r<<16)|(g<<8)|b;
     }
   }
 }
@@ -121,7 +137,7 @@ void drawImage(ref int[][] pixels, long x, long y, Image img)
 void drawStage(Game game, const(char[][]) stage, const(P) player)
 {
   auto pixels = new int[][](game.width, game.height);
-  pixels.fill2d(0x00ffffff);
+  pixels.fill2d(0x00cccccc);
 
   foreach (y, l; stage) {
     foreach (x, c; l) {
