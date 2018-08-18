@@ -2,8 +2,9 @@ import std.stdio;
 import std.conv;
 import std.algorithm;
 import std.range;
-import lib.game;
 import imageformats;
+import lib.game;
+import lib.util;
 
 Image wallImg;
 Image playerImg;
@@ -109,7 +110,10 @@ void drawImage(ref int[][] pixels, long x, long y, Image img)
 {
   foreach (dx; 0..img.w) {
     foreach (dy; 0..img.h) {
-      pixels[y + dy][x + dx] = img.pixels[dx * img.h + dy];
+      auto p = img.pixels[dx * img.h + dy];
+      if ((cast(uint)(p) & 0x80000000)) {  // alpha bits >= 128
+        pixels[y + dy][x + dx] = p;
+      }
     }
   }
 }
@@ -117,9 +121,11 @@ void drawImage(ref int[][] pixels, long x, long y, Image img)
 void drawStage(Game game, const(char[][]) stage, const(P) player)
 {
   auto pixels = new int[][](game.width, game.height);
+  pixels.fill2d(0x00ffffff);
 
   foreach (y, l; stage) {
     foreach (x, c; l) {
+
       auto img = mapImg;
       if (c == '.') {
         img = goalImg;
@@ -133,6 +139,8 @@ void drawStage(Game game, const(char[][]) stage, const(P) player)
       else if (c == '#') {
         img = wallImg;
       }
+
+      pixels.drawImage(y * 32, x * 32, mapImg);
       pixels.drawImage(y * 32, x * 32, img);
 
       if (player == P(y, x)) {
@@ -168,7 +176,7 @@ Image loadImage(string filepath)
     auto img = read_image(filepath, ColFmt.RGBA);
     int[] pixels = [];
     foreach (rgba; img.pixels.chunks(4)) {
-      pixels ~=  (rgba[0]<<24)|(rgba[1]<<16)|(rgba[2]<<8)|rgba[3];
+      pixels ~=  (rgba[3]<<24)|(rgba[0]<<16)|(rgba[1]<<8)|rgba[2];
     }
     return Image(img.w, img.h, pixels);
 }
