@@ -85,27 +85,6 @@ void updateGame(ref char[][] stage, ref P player, Input input)
 }
 
 
-void drawRect(ref int[][] pixels, long x, long y, long w, long h, int color)
-{
-  foreach (dy; 0..h) {
-    pixels[y+dy][x] = color;
-    pixels[y+dy][x+w-1] = color;
-  }
-  foreach (dx; 0..w) {
-    pixels[y][x+dx]= color;
-    pixels[y+h-1][x+dx]= color;
-  }
-}
-
-void fillRect(ref int[][] pixels, long x, long y, long w, long h, int color)
-{
-  foreach (dx; 0..w) {
-    foreach (dy; 0..h) {
-      pixels[y+dy][x+dx] = color;
-    }
-  }
-}
-
 void drawImage(Game game, long x, long y, Image img)
 {
   foreach (dy; 0..img.h) {
