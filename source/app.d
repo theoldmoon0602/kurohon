@@ -15,8 +15,8 @@ Image goalImg;
 struct P
 {
   public:
-    long y = 0;
     long x = 0;
+    long y = 0;
 }
 
 enum Input
@@ -106,39 +106,17 @@ void fillRect(ref int[][] pixels, long x, long y, long w, long h, int color)
   }
 }
 
-void drawImage(ref int[][] pixels, long x, long y, Image img)
+void drawImage(Game game, long x, long y, Image img)
 {
-  foreach (dx; 0..img.w) {
-    foreach (dy; 0..img.h) {
-      // alpha blending (additional completion)
-      int p1 = img.pixels[dx * img.h + dy];
-      int a  = (p1&0xff000000) >> 24;
-      int r1 = (p1&0x00ff0000) >> 16;
-      int g1 = (p1&0x0000ff00) >> 8;
-      int b1 = (p1&0x000000ff);
-
-      int p2 = pixels[y + dy][x + dx];
-      int r2 = (p2&0x00ff0000) >> 16;
-      int g2 = (p2&0x0000ff00) >> 8;
-      int b2 = (p2&0x000000ff);
-
-      double a1 = a / 255.0;
-      double a2 = (255 - a) / 255.0;
-
-      int r = cast(int)(a1 * r1 + a2 * r2);
-      int g = cast(int)(a1 * g1 + a2 * g2);
-      int b = cast(int)(a1 * b1 + a2 * b2);
-
-      pixels[y + dy][x + dx] = (r<<16)|(g<<8)|b;
+  foreach (dy; 0..img.h) {
+    foreach (dx; 0..img.w) {
+      game.setPixel(x + dx, y + dy, img.pixels[dy * img.w + dx], BlendMode.ALPHABLEND);
     }
   }
 }
 
 void drawStage(Game game, const(char[][]) stage, const(P) player)
 {
-  auto pixels = new int[][](game.width, game.height);
-  pixels.fill2d(0x00cccccc);
-
   foreach (y, l; stage) {
     foreach (x, c; l) {
 
@@ -156,18 +134,12 @@ void drawStage(Game game, const(char[][]) stage, const(P) player)
         img = wallImg;
       }
 
-      pixels.drawImage(y * 32, x * 32, mapImg);
-      pixels.drawImage(y * 32, x * 32, img);
+      game.drawImage(x * 32, y * 32, mapImg);
+      game.drawImage(x * 32, y * 32, img);
 
-      if (player == P(y, x)) {
-        pixels.drawImage(y * 32, x * 32, playerImg);
+      if (player == P(x, y)) {
+        game.drawImage(x * 32, y * 32, playerImg);
       }
-    }
-  }
-
-  foreach (y; 0..game.height) {
-    foreach (x; 0..game.width) {
-      game.pixelbuf[y][x] = pixels[x][y];
     }
   }
 }
@@ -180,19 +152,12 @@ bool checkIsGameClear(const(char[][]) stage)
   return true;
 }
 
-struct Image {
-    public:
-        long w;
-        long h;
-        int[] pixels;
-}
-
 Image loadImage(string filepath)
 {
     auto img = read_image(filepath, ColFmt.RGBA);
-    int[] pixels = [];
+    uint[] pixels = [];
     foreach (rgba; img.pixels.chunks(4)) {
-      pixels ~=  (rgba[3]<<24)|(rgba[0]<<16)|(rgba[1]<<8)|rgba[2];
+      pixels ~= cast(uint)((rgba[3]<<24)|(rgba[0]<<16)|(rgba[1]<<8)|rgba[2]);
     }
     return Image(img.w, img.h, pixels);
 }
@@ -208,7 +173,7 @@ void main() {
     "#      #",
     "########",
   ].to!(char[][]);
-  auto player = P(1, 5);
+  auto player = P(5, 1);
 
   wallImg = loadImage("wall.png");
   playerImg = loadImage("player.png");
