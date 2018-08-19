@@ -12,7 +12,8 @@ struct Image {
 
 enum BlendMode {
   NOBLEND,
-  ALPHABLEND
+  ALPHABLEND,
+  ADDBLEND,
 }
 
 class Game
@@ -90,37 +91,43 @@ class Game
       return keystate[code];
     }
 
-    void setPixel(long x, long y, uint c1, BlendMode mode = BlendMode.NOBLEND)
+    void setPixel(long x, long y, uint color, BlendMode mode = BlendMode.NOBLEND)
     {
       if (x < 0 || width <= x || y < 0 || height <= y) {
         return;
       }
       int c;
-      uint c2 = cast(uint)pixelbuf[y][x];
       final switch (mode) {
         case BlendMode.NOBLEND:
-          c = cast(uint)c1;
+          c = cast(uint)color;
           break;
         case BlendMode.ALPHABLEND:
         {
-          // alpha blending (additional completion)
-          int a  = (c1&0xff000000) >> 24;
-          int r1 = (c1&0x00ff0000) >> 16;
-          int g1 = (c1&0x0000ff00) >> 8;
-          int b1 = (c1&0x000000ff);
+          auto c1 = from_color(color);
+          auto c2 = from_color(pixelbuf[y][x]);
 
-          int r2 = (c2&0x00ff0000) >> 16;
-          int g2 = (c2&0x0000ff00) >> 8;
-          int b2 = (c2&0x000000ff);
+          double a1 = c1.a / 255.0;
+          double a2 = (255 - c1.a) / 255.0;
 
-          double a1 = a / 255.0;
-          double a2 = (255 - a) / 255.0;
+          auto r = cast(ubyte)(a1 * c1.r + a2 * c2.r);
+          auto g = cast(ubyte)(a1 * c1.g + a2 * c2.g);
+          auto b = cast(ubyte)(a1 * c1.b + a2 * c2.b);
 
-          int r = cast(int)(a1 * r1 + a2 * r2);
-          int g = cast(int)(a1 * g1 + a2 * g2);
-          int b = cast(int)(a1 * b1 + a2 * b2);
+          c = to_color(r,g,b);
+          break;
+        }
+        case BlendMode.ADDBLEND:
+        {
+          auto c1 = from_color(color);
+          auto c2 = from_color(pixelbuf[y][x]);
 
-          c = (r<<16)|(g<<8)|b;
+          double a1 = c1.a / 255.0;
+
+          auto r = cast(ubyte)(a1 * c1.r + c2.r);
+          auto g = cast(ubyte)(a1 * c1.g + c2.g);
+          auto b = cast(ubyte)(a1 * c1.b + c2.b);
+
+          c = to_color(r,g,b);
           break;
         }
       }
