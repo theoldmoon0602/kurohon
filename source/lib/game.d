@@ -1,6 +1,10 @@
 module lib.game;
 import lib.util;
 
+import std.format;
+import std.string;
+import std.range;
+import std.algorithm;
 public import derelict.sdl2.sdl;
 
 enum BlendMode {
@@ -11,19 +15,24 @@ enum BlendMode {
 
 class Game
 {
+  protected:
+    int[][] pixelbuf;
+
   public:
     SDL_Window* window;
     SDL_Renderer* renderer;
     SDL_Texture* texture;
     uint[256] keystate;
-  protected:
-    int[][] pixelbuf;
 
-  public:
     const uint width = 640;
     const uint height = 480;
+    const uint FPS;
+    int frame_ms;
+    uint last_tick;
+    uint[] frameseconds;
+    const uint fps_calc_frames = 10;
 
-    this()
+    this(uint FPS=30)
     {
       DerelictSDL2.load();
       SDL_Init(SDL_INIT_EVERYTHING);
@@ -38,6 +47,10 @@ class Game
       texture = SDL_CreateTexture(renderer,
           SDL_PIXELFORMAT_ARGB8888, SDL_TEXTUREACCESS_STATIC, width, height);
       pixelbuf = new int[][](height, width);
+      this.FPS = FPS;
+      frame_ms = cast(int)(1.0 / FPS * 1000);
+      last_tick = SDL_GetTicks();
+      this.frameseconds = [];
     }
     ~this() {
       SDL_Quit();
@@ -45,6 +58,25 @@ class Game
 
     bool handleEvent()
     {
+      // sleep
+      auto now_tick = SDL_GetTicks();
+      auto tick_diff = now_tick - last_tick;
+      last_tick = now_tick;
+
+      if (frame_ms > tick_diff) {
+        SDL_Delay(frame_ms - tick_diff);
+      }
+
+      // show frame rate at window title
+      frameseconds ~= tick_diff;
+      if (frameseconds.length >= fps_calc_frames) {
+        auto frame_rate = (1000.0 / frameseconds.sum()) * frameseconds.length;
+
+        SDL_SetWindowTitle(window, "%.1f".format(frame_rate).toStringz);
+        frameseconds.length = 0;
+      }
+
+      // handle events
       SDL_Event e;
       while (SDL_PollEvent(&e) != 0) {
         if (e.type == SDL_QUIT) {
