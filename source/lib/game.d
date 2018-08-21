@@ -3,13 +3,6 @@ import lib.util;
 
 public import derelict.sdl2.sdl;
 
-struct Image {
-  public:
-    long w;
-    long h;
-    uint[] pixels;
-}
-
 enum BlendMode {
   NOBLEND,
   ALPHABLEND,

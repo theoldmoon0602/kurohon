@@ -3,8 +3,7 @@ import std.conv;
 import std.algorithm;
 import std.range;
 import imageformats;
-import lib.game;
-import lib.util;
+import lib;
 
 Image wallImg;
 Image playerImg;
@@ -85,15 +84,6 @@ void updateGame(ref char[][] stage, ref P player, Input input)
 }
 
 
-void drawImage(Game game, long x, long y, Image img)
-{
-  foreach (dy; 0..img.h) {
-    foreach (dx; 0..img.w) {
-      game.setPixel(x + dx, y + dy, img.pixels[dy * img.w + dx], BlendMode.ALPHABLEND);
-    }
-  }
-}
-
 void drawStage(Game game, const(char[][]) stage, const(P) player)
 {
   foreach (y, l; stage) {
@@ -129,16 +119,6 @@ bool checkIsGameClear(const(char[][]) stage)
     if (l.canFind("o")) { return false; }
   }
   return true;
-}
-
-Image loadImage(string filepath)
-{
-    auto img = read_image(filepath, ColFmt.RGBA);
-    uint[] pixels = [];
-    foreach (rgba; img.pixels.chunks(4)) {
-      pixels ~= cast(uint)((rgba[3]<<24)|(rgba[0]<<16)|(rgba[1]<<8)|rgba[2]);
-    }
-    return Image(img.w, img.h, pixels);
 }
 
 
