@@ -1,10 +1,10 @@
 import lib;
 
-import scenes.game;
+import scenes.title;
 
 void main() {
   auto game = new Game();
-  Scene curScene = new GameScene();
+  Scene curScene = new TitleScene();
   curScene.load();
 
   while (game.handleEvent()) {
@@ -16,10 +16,14 @@ void main() {
     curScene.draw(game);
     game.redraw();
 
+    if (nextScene is null) {
+      break;
+    }
     if (nextScene != curScene) {
       curScene = nextScene;
-      curScene.load();
-      break;
+      if (!curScene.isLoaded()) {
+        curScene.load();
+      }
     }
   }
 }

@@ -5,6 +5,9 @@ import std.algorithm;
 import std.range;
 import lib;
 
+import scenes.title;
+import scenes.pause;
+
 struct P
 {
 public:
@@ -29,6 +32,7 @@ protected:
     Image mapImg;
     Image boxImg;
     Image goalImg;
+    bool loaded;
 
     char[][] stage;
 
@@ -72,8 +76,10 @@ protected:
 public:
     this()
     {
+      loaded = false;
     }
 
+    bool isLoaded() const { return loaded; }
     void load()
     {
         wallImg = loadImage("wall.png");
@@ -84,10 +90,16 @@ public:
 
         stage = ["########", "# ..   #", "# oo   #", "#      #", "########",].to!(char[][]);
         player = P(5, 1);
+
+        loaded = true;
     }
 
     Scene update(const(GameState) state)
     {
+        if (state.key(SDL_SCANCODE_SPACE) == 1) {
+          return new PauseScene(this, state.getScreen());
+        }
+
         const input = this.keyInput(state);
         P newp = player;
         P dp;
@@ -149,6 +161,9 @@ public:
         }
 
         player = newp;
+        if (checkIsGameClear()) {
+          return new TitleScene();
+        }
         return this;
     }
 

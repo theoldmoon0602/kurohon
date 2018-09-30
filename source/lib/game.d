@@ -1,5 +1,6 @@
 module lib.game;
 import lib.util;
+import lib.image;
 
 import std.format;
 import std.string;
@@ -15,6 +16,7 @@ enum BlendMode {
 
 interface GameState {
   uint key(long) const;
+  Image getScreen() const;
 }
 interface GameDrawer {
     void setPixel(long x, long y, uint color, BlendMode mode = BlendMode.NOBLEND);
@@ -25,6 +27,7 @@ class Game : GameState, GameDrawer
 {
   protected:
     int[][] pixelbuf;
+    int[] screenbuf;
 
   public:
     SDL_Window* window;
@@ -105,13 +108,13 @@ class Game : GameState, GameDrawer
     }
 
     void redraw() {
-      int[] vs = [];
+      screenbuf.length = 0;
       foreach (y; 0..height) {
         foreach (x; 0..width) {
-          vs ~= pixelbuf[y][x];
+          screenbuf ~= pixelbuf[y][x];
         }
       }
-      SDL_UpdateTexture(texture, null, &(vs[0]), cast(int)(width * int.sizeof));
+      SDL_UpdateTexture(texture, null, &(screenbuf[0]), cast(int)(width * int.sizeof));
       SDL_SetRenderDrawColor(renderer, 0x00,0x00,0x00,0x00);
       SDL_RenderClear(renderer);
       SDL_RenderCopy(renderer, texture, null, null);
@@ -165,6 +168,16 @@ class Game : GameState, GameDrawer
         }
       }
       pixelbuf[y][x] = c;
+    }
+
+    Image getScreen() const {
+      auto buf = new uint[](width * height);
+      foreach (y; 0..height) {
+        foreach (x; 0..width) {
+          buf[y*width + x] = 0xff000000 | screenbuf[y*width + x];
+        }
+      }
+      return Image(width, height, buf);
     }
 }
 
