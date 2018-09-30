@@ -13,7 +13,15 @@ enum BlendMode {
   ADDBLEND,
 }
 
-class Game
+interface GameState {
+  uint key(long) const;
+}
+interface GameDrawer {
+    void setPixel(long x, long y, uint color, BlendMode mode = BlendMode.NOBLEND);
+}
+
+
+class Game : GameState, GameDrawer
 {
   protected:
     int[][] pixelbuf;
@@ -112,7 +120,7 @@ class Game
       pixelbuf.fill2d(0x00000000);
     }
 
-    uint key(long code) {
+    uint key(long code) const {
       return keystate[code];
     }
 
@@ -159,3 +167,4 @@ class Game
       pixelbuf[y][x] = c;
     }
 }
+

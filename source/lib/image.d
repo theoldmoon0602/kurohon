@@ -12,11 +12,11 @@ struct Image {
     uint[] pixels;
 }
 
-void drawImage(Game game, long x, long y, Image img)
+void drawImage(GameDrawer drawer, long x, long y, Image img)
 {
   foreach (dy; 0..img.h) {
     foreach (dx; 0..img.w) {
-      game.setPixel(x + dx, y + dy, img.pixels[dy * img.w + dx], BlendMode.ALPHABLEND);
+      drawer.setPixel(x + dx, y + dy, img.pixels[dy * img.w + dx], BlendMode.ALPHABLEND);
     }
   }
 }
