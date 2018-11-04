@@ -29,6 +29,10 @@ class Game : GameState, GameDrawer
     int[][] pixelbuf;
     int[] screenbuf;
 
+    int frame_ms;
+    uint last_tick;
+    uint last_calc_tick;
+    uint fps_calc_count;
   public:
     SDL_Window* window;
     SDL_Renderer* renderer;
@@ -38,10 +42,7 @@ class Game : GameState, GameDrawer
     const uint width = 640;
     const uint height = 480;
     const uint FPS;
-    int frame_ms;
-    uint last_tick;
-    uint[] frameseconds;
-    const uint fps_calc_frames = 10;
+    const uint FPS_CALC_MSECONDS = 5000;
 
     this(uint FPS=30)
     {
@@ -59,18 +60,28 @@ class Game : GameState, GameDrawer
           SDL_PIXELFORMAT_ARGB8888, SDL_TEXTUREACCESS_STATIC, width, height);
       pixelbuf = new int[][](height, width);
       this.FPS = FPS;
-      frame_ms = cast(int)(1.0 / FPS * 1000);
+      this.fps_calc_count = 0;
+      frame_ms = cast(int)(1000.0 / FPS);
       last_tick = SDL_GetTicks();
-      this.frameseconds = [];
+      last_calc_tick = last_tick;
     }
     ~this() {
       SDL_Quit();
     }
 
-    bool handleEvent()
-    {
+    /// wait some milliseconds 
+    void wait() {
       // sleep
       auto now_tick = SDL_GetTicks();
+      // show frame rate at window title
+      if ((now_tick - last_calc_tick) > FPS_CALC_MSECONDS) {
+        auto fps = cast(double)(fps_calc_count) * 1000.0 / FPS_CALC_MSECONDS;
+        SDL_SetWindowTitle(window, "%.1f".format(fps).toStringz());
+        fps_calc_count = 0;
+        last_calc_tick = now_tick;
+      }
+      fps_calc_count++;
+
       auto tick_diff = now_tick - last_tick;
       last_tick = now_tick;
 
@@ -78,15 +89,10 @@ class Game : GameState, GameDrawer
         SDL_Delay(frame_ms - tick_diff);
       }
 
-      // show frame rate at window title
-      frameseconds ~= tick_diff;
-      if (frameseconds.length >= fps_calc_frames) {
-        auto frame_rate = (1000.0 / frameseconds.sum()) * frameseconds.length;
+    }
 
-        SDL_SetWindowTitle(window, "%.1f".format(frame_rate).toStringz);
-        frameseconds.length = 0;
-      }
-
+    bool handleEvent()
+    {
       // handle events
       SDL_Event e;
       while (SDL_PollEvent(&e) != 0) {

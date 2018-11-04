@@ -13,6 +13,7 @@ void main() {
     }
     
     Scene nextScene = curScene.update(game);
+    game.wait();
     curScene.draw(game);
     game.redraw();
 
